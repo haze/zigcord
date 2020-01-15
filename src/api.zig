@@ -1,12 +1,25 @@
 const std = @import("std");
 const json = std.json;
 
+pub const DiscordError = struct {
+    message: []const u8,
+    code: i64,
+
+    pub fn fromJson(obj: json.Value) !DiscordError {
+        if (obj != .Object) return error.ExpectingObject;
+        return DiscordError{
+            .message = (obj.Object.getValue("message") orelse return error.MissingMessage).String,
+            .code = (obj.Object.getValue("code") orelse return error.MissingCode).Integer,
+        };
+    }
+};
+
 pub const Snowflake = struct {
     id: i64,
 
     // this is used because discord sends snowflakes as strings to
     // bypass integer overflow
-    fn from_json(obj: json.Value) !Snowflake {
+    fn fromJson(obj: json.Value) !Snowflake {
         if (obj != .String) return error.ExpectingString;
         return Snowflake{
             .id = try std.fmt.parseInt(i64, obj.String, 10),
@@ -32,7 +45,7 @@ pub const User = struct {
         NitroClassic,
         Nitro,
 
-        fn from_json(obj: json.Value) !PremiumType {
+        fn fromJson(obj: json.Value) !PremiumType {
             if (obj != .Integer) return error.ExpectingInteger;
             switch (obj.Integer) {
                 1 => return .NitroClassic,
@@ -44,10 +57,10 @@ pub const User = struct {
     premium_type: ?PremiumType = null,
 
     // CHORE(haze): extra safe checks
-    pub fn from_json(obj: json.Value) !User {
+    pub fn fromJson(obj: json.Value) !User {
         if (obj != .Object) return error.NotAnObject;
         var user = User{
-            .id = try Snowflake.from_json((obj.Object.getValue("id") orelse return error.MissingId)),
+            .id = try Snowflake.fromJson((obj.Object.getValue("id") orelse return error.MissingId)),
             .username = (obj.Object.getValue("username") orelse return error.MissingUsername).String,
             .discriminator = (obj.Object.getValue("discriminator") orelse return error.MissingDiscriminator).String,
         };
@@ -67,7 +80,7 @@ pub const User = struct {
             user.email = _email.String;
         }
         if (obj.Object.getValue("premium_type")) |prem_type| {
-            user.premium_type = try PremiumType.from_json(prem_type);
+            user.premium_type = try PremiumType.fromJson(prem_type);
         }
         return user;
     }

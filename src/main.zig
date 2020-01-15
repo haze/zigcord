@@ -61,8 +61,13 @@ pub const DiscordTransport = struct {
 
     fn getJSON(self: *Self, path: []const u8) !json.Value {
         const data = try self.get(path);
+        std.debug.warn("got data: \"{}\"\n", .{data});
         const root = (try self.jsonParser.parse(data)).root;
         self.jsonParser.reset();
+        if (DiscordError.fromJson(root) catch null) |err| {
+            std.debug.warn("Got error: {s}\n", .{err.message});
+            return error.DiscordError;
+        }
         return root;
     }
 
@@ -97,10 +102,10 @@ pub const DiscordTransport = struct {
     }
 
     pub fn get_current_user(self: *Self) !User {
-        return User.from_json(try self.getJSON("/users/@me"));
+        return User.fromJson(try self.getJSON("/users/@me"));
     }
 
     pub fn get_user(self: *Self, id: Snowflake) !User {
-        return User.from_json(try self.getJSON(try fmt.allocPrint(self.allocator, "/users/{}", .{id.id})));
+        return User.fromJson(try self.getJSON(try fmt.allocPrint(self.allocator, "/users/{}", .{id.id})));
     }
 };

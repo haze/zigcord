@@ -6,7 +6,7 @@ pub fn main() anyerror!void {
     defer arena.deinit();
     const allocator = &arena.allocator;
 
-    var transport = try discord.DiscordTransport.init(allocator, .{ .token = "NTk5MTMxNzg1NzMyODE2ODk4.XgkdRg.PKT15KD-8ufUaQbOZraT2D4Gidc" });
+    var transport = try discord.DiscordTransport.init(allocator, .{ .token = "jdfoikjsdflkjsdlkfj" });
     defer transport.deinit();
     std.debug.warn("{?}\n", .{transport.get_current_user()});
     std.debug.warn("{?}\n", .{transport.get_user(.{ .id = 272713970823987206 })});
